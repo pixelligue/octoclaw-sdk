@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tonguard"
+version = "1.0.0"
+description = "Security layer for AI agent TON transactions — confirmation codes, spending limits, cooldowns"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+keywords = ["ton", "blockchain", "ai-agent", "security", "langchain", "langgraph", "wallet"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.optional-dependencies]
+langchain = ["langchain-core>=0.1.0"]
+
+[project.urls]
+Homepage = "https://github.com/nicenemo/octoclaw-engine"
+Repository = "https://github.com/nicenemo/octoclaw-engine/tree/main/packages/tonguard-py"

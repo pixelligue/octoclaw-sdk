@@ -1,0 +1,52 @@
+{
+  "name": "@octoclaw/ton-agent-kit",
+  "version": "1.0.0",
+  "description": "Complete toolkit for building AI agents on TON — wallet tools, TonGuard security, billing, payments. Works with LangChain, LangGraph, or any framework.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "ton",
+    "blockchain",
+    "ai-agent",
+    "langchain",
+    "langgraph",
+    "wallet",
+    "mcp",
+    "tonguard",
+    "agent-kit",
+    "defi"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pixelligue/octoclaw-sdk",
+    "directory": "packages/ton-agent-kit"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "@langchain/core": ">=0.1.0",
+    "@ton/crypto": ">=3.0.0",
+    "@ton/ton": ">=14.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": true
+    },
+    "@ton/ton": {
+      "optional": true
+    },
+    "@ton/crypto": {
+      "optional": true
+    }
+  }
+}

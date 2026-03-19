@@ -1,0 +1,43 @@
+{
+  "name": "@octoclaw/tonguard",
+  "version": "1.0.0",
+  "description": "Security layer for AI agent TON transactions — confirmation codes, spending limits, cooldowns",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "ton",
+    "blockchain",
+    "ai-agent",
+    "security",
+    "langchain",
+    "langgraph",
+    "mcp",
+    "wallet",
+    "tonguard"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pixelligue/octoclaw-sdk",
+    "directory": "packages/tonguard-js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "@langchain/core": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": true
+    }
+  }
+}
