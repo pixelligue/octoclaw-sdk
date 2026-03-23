@@ -1,7 +1,7 @@
 {
-  "name": "@octoclaw/ton-agent-kit",
-  "version": "1.0.0",
-  "description": "Complete toolkit for building AI agents on TON — wallet tools, TonGuard security, billing, payments. Works with LangChain, LangGraph, or any framework.",
+  "name": "octoclaw-ton-agent-kit",
+  "version": "1.1.0",
+  "description": "Complete toolkit for building AI agents on TON — wallet, TonGuard security, A2AE marketplace (agent-to-agent economy), payments. Works with LangChain, LangGraph, or any framework.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -17,7 +17,12 @@
     "mcp",
     "tonguard",
     "agent-kit",
-    "defi"
+    "defi",
+    "a2ae",
+    "agent-economy",
+    "marketplace",
+    "reputation",
+    "sbt"
   ],
   "license": "MIT",
   "repository": {

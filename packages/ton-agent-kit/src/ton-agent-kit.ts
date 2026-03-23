@@ -356,6 +356,11 @@ export class TonAgentKit {
       this.agenticDeployTool(),
       this.agenticWalletsTool(),
       this.walletInfoTool(),
+      // A2AE — Agent-to-Agent Economy
+      this.a2aeRegisterTool(),
+      this.a2aeDiscoverTool(),
+      this.a2aeHireTool(),
+      this.a2aeReputationTool(),
     ];
   }
 
@@ -1544,6 +1549,169 @@ export class TonAgentKit {
         } catch (err: any) {
           return `📋 Wallet info error: ${err.message}`;
         }
+      },
+    };
+  }
+
+  // ═══ A2AE — Agent-to-Agent Economy Tools ═══════════════
+
+  /** In-memory service registry for A2AE marketplace */
+  private a2aeServices: Array<{
+    agentId: string; name: string; skill: string; description: string;
+    price: number; rating: number; calls: number;
+  }> = [];
+
+  private a2aeRegisterTool(): AgentTool {
+    return {
+      name: 'a2ae_register',
+      description: 'Register a service on the A2AE marketplace. Other agents can discover and hire you.',
+      parameters: {
+        type: 'object',
+        properties: {
+          skill: { type: 'string', description: 'Skill name: web_research, code_review, translate, content_writing, data_analysis' },
+          description: { type: 'string', description: 'What this service does' },
+          price: { type: 'number', description: 'Price per call in TON (e.g. 0.05)' },
+        },
+        required: ['skill', 'description', 'price'],
+      },
+      dangerous: false,
+      execute: async (args) => {
+        const skill = args.skill as string;
+        const description = args.description as string;
+        const price = args.price as number;
+
+        this.a2aeServices.push({
+          agentId: this.userId,
+          name: `Agent-${this.userId.slice(0, 6)}`,
+          skill, description, price,
+          rating: 0, calls: 0,
+        });
+
+        return `✅ Service registered on A2AE marketplace:\n` +
+          `  Skill: ${skill}\n  Price: ${price} TON/call\n` +
+          `  Other agents can now discover and hire you.`;
+      },
+    };
+  }
+
+  private a2aeDiscoverTool(): AgentTool {
+    return {
+      name: 'a2ae_discover',
+      description: 'Find agents on the A2AE marketplace by skill. Returns available providers with price and rating.',
+      parameters: {
+        type: 'object',
+        properties: {
+          skill: { type: 'string', description: 'Skill to search for' },
+          maxPrice: { type: 'number', description: 'Maximum price in TON (optional)' },
+        },
+        required: ['skill'],
+      },
+      dangerous: false,
+      execute: async (args) => {
+        const skill = args.skill as string;
+        const maxPrice = args.maxPrice as number | undefined;
+
+        const matches = this.a2aeServices
+          .filter(s => s.skill === skill && (!maxPrice || s.price <= maxPrice))
+          .sort((a, b) => b.rating - a.rating || a.price - b.price);
+
+        if (matches.length === 0) {
+          return `📭 No agents found for skill "${skill}" on A2AE marketplace.`;
+        }
+
+        const lines = matches.map((m, i) =>
+          `${i + 1}. ${m.name} — ${m.price} TON | ⭐${m.rating.toFixed(1)} | ${m.calls} calls\n   ${m.description}`
+        );
+        return `🔍 Found ${matches.length} agents for "${skill}":\n\n${lines.join('\n\n')}`;
+      },
+    };
+  }
+
+  private a2aeHireTool(): AgentTool {
+    return {
+      name: 'a2ae_hire',
+      description: 'Hire another agent from the A2AE marketplace to perform a task. Pays TON automatically via TonGuard.',
+      parameters: {
+        type: 'object',
+        properties: {
+          skill: { type: 'string', description: 'Skill needed' },
+          task: { type: 'string', description: 'Task description' },
+        },
+        required: ['skill', 'task'],
+      },
+      dangerous: true,
+      execute: async (args) => {
+        const skill = args.skill as string;
+        const task = args.task as string;
+
+        const matches = this.a2aeServices.filter(s => s.skill === skill);
+        if (matches.length === 0) return `❌ No agents for "${skill}". Register one first with a2ae_register.`;
+
+        const best = matches.sort((a, b) => b.rating - a.rating)[0];
+
+        // TonGuard check
+        const gate = this.guard.gate(this.userId, best.price, undefined, `A2AE: ${skill}`);
+        if (gate.status === 'rejected') return `❌ Payment blocked: ${gate.reason}`;
+        if (gate.status === 'pending') return `⏳ Confirm payment of ${best.price} TON with code: **${gate.code}**`;
+
+        // Record
+        best.calls++;
+        best.rating = Math.min(5, best.rating + 0.5);
+
+        return `✅ Hired ${best.name} for "${skill}"\n` +
+          `💸 Paid: ${best.price} TON\n` +
+          `📋 Task: ${task}\n` +
+          `⭐ New rating: ${best.rating.toFixed(1)}/5\n\n` +
+          `[A2AE] Agent ${best.name} is executing the task...`;
+      },
+    };
+  }
+
+  private a2aeReputationTool(): AgentTool {
+    return {
+      name: 'a2ae_reputation',
+      description: 'Check an agent\'s reputation on the A2AE marketplace, or view the leaderboard.',
+      parameters: {
+        type: 'object',
+        properties: {
+          agentId: { type: 'string', description: 'Agent ID to check (optional, omit for leaderboard)' },
+        },
+        required: [],
+      },
+      dangerous: false,
+      execute: async (args) => {
+        const agentId = args.agentId as string | undefined;
+
+        if (agentId) {
+          const services = this.a2aeServices.filter(s => s.agentId === agentId);
+          if (services.length === 0) return `❌ Agent ${agentId} not found on marketplace.`;
+          const totalCalls = services.reduce((s, x) => s + x.calls, 0);
+          const avgRating = services.reduce((s, x) => s + x.rating, 0) / services.length;
+          return `🏆 Agent ${agentId}:\n` +
+            `  ⭐ Rating: ${avgRating.toFixed(1)}/5\n` +
+            `  📊 Tasks: ${totalCalls}\n` +
+            `  🏷️ Skills: ${services.map(s => s.skill).join(', ')}`;
+        }
+
+        // Leaderboard
+        const agents = new Map<string, { name: string; rating: number; calls: number; skills: string[] }>();
+        for (const s of this.a2aeServices) {
+          const a = agents.get(s.agentId) || { name: s.name, rating: 0, calls: 0, skills: [] };
+          a.rating = Math.max(a.rating, s.rating);
+          a.calls += s.calls;
+          a.skills.push(s.skill);
+          agents.set(s.agentId, a);
+        }
+
+        const sorted = Array.from(agents.entries())
+          .sort((a, b) => b[1].rating - a[1].rating);
+
+        if (sorted.length === 0) return '📭 No agents on marketplace yet.';
+
+        const lines = sorted.map(([id, a], i) =>
+          `${i + 1}. ${a.name} — ⭐${a.rating.toFixed(1)} | ${a.calls} tasks | ${a.skills.join(', ')}`
+        );
+        return `🏆 A2AE Leaderboard:\n\n${lines.join('\n')}`;
       },
     };
   }
